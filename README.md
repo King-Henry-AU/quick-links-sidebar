@@ -4,9 +4,11 @@ A HubSpot CRM sidebar card that displays configurable quick link buttons on cont
 
 ## Features
 
-- ✅ **Configurable Quick Links** - Display up to 3 customizable button links in the CRM sidebar
+- ✅ **Easy Settings Page** - Configure which properties to use through a user-friendly interface
+- ✅ **Flexible Configuration** - Use any existing CRM properties for button URLs and labels
+- ✅ **Unlimited Buttons** - Add as many quick link buttons as you need (up to 10)
 - ✅ **Dynamic URLs** - Links are stored in HubSpot custom properties on contact/company records
-- ✅ **Custom Labels** - Each button can have a custom label or use defaults
+- ✅ **Custom Labels** - Static text or dynamic from properties
 - ✅ **OAuth Authentication** - Secure public app with OAuth 2.0
 - ✅ **Multi-Object Support** - Works on both contacts and companies
 - ✅ **Production Ready** - Built with TypeScript and HubSpot UI Extensions
@@ -29,32 +31,39 @@ A HubSpot CRM sidebar card that displays configurable quick link buttons on cont
 
 ## Configuration
 
-The app reads button URLs and labels from custom properties on your records.
+### Step 1: Configure Button Properties
 
-### Required Custom Properties
+1. After installing the app, go to **Settings** (gear icon in the app)
+2. For each button you want to add:
+   - **URL Property Name**: Enter the internal name of the property containing the URL (e.g., `linkedin_url`, `github_profile`)
+   - **Label Type**: Choose "Static Text" or "From Property"
+   - **Label**: Enter static text (e.g., "LinkedIn Profile") or select a property containing the label
+3. Click **Save Settings**
 
-Create these properties on your **Contact** and **Company** objects:
+### Step 2: Populate Properties on Records
 
-#### URL Properties (Single-line text)
-- `button_url_1` - URL for the first button
-- `button_url_2` - URL for the second button
-- `button_url_3` - URL for the third button
+The app works with any existing single-line text or calculation properties in your CRM. Simply populate the properties you configured in settings with URL values.
 
-#### Label Properties (Single-line text - Optional)
-- `button_label_1` - Label for the first button (default: "Link 1")
-- `button_label_2` - Label for the second button (default: "Link 2")
-- `button_label_3` - Label for the third button (default: "Link 3")
+### Example Configuration
 
-### Example Property Values
+**In Settings:**
+| Button | URL Property | Label Type | Label |
+|--------|-------------|------------|-------|
+| 1 | `linkedin_url` | Static Text | `LinkedIn Profile` |
+| 2 | `github_profile` | Static Text | `GitHub` |
+| 3 | `external_dashboard_url` | From Property | `dashboard_label` |
 
-| Property | Example Value |
-|----------|--------------|
-| `button_url_1` | `https://linkedin.com/in/johndoe` |
-| `button_label_1` | `LinkedIn Profile` |
-| `button_url_2` | `https://github.com/johndoe` |
-| `button_label_2` | `GitHub` |
-| `button_url_3` | `https://example.com/dashboard/12345` |
-| `button_label_3` | `External Dashboard` |
+**On a Contact Record:**
+| Property | Value |
+|----------|-------|
+| `linkedin_url` | `https://linkedin.com/in/johndoe` |
+| `github_profile` | `https://github.com/johndoe` |
+| `external_dashboard_url` | `https://example.com/dashboard/12345` |
+| `dashboard_label` | `View Dashboard` |
+
+### No Property Setup Required
+
+The beauty of the settings page is that you can use **any existing properties** in your CRM - no need to create specific ones unless you want to!
 
 ## OAuth Configuration
 
