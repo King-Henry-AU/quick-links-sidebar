@@ -1,0 +1,14 @@
+{
+  "uid": "record_view_sidebar_buttons_card",
+  "type": "card",
+  "config": {
+    "name": "Quick Links",
+    "description": "Display buttons that link to URLs stored in record properties",
+    "location": "crm.record.sidebar",
+    "entrypoint": "/app/cards/QuickLinksCard.tsx",
+    "objectTypes": [
+      "contacts",
+      "companies"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "quick-links-sidebar",
+  "version": "1.0.0",
+  "description": "HubSpot CRM sidebar card with configurable quick link buttons",
+  "main": "src/app/cards/QuickLinksCard.tsx",
+  "scripts": {
+    "dev": "hs project dev",
+    "upload": "hs project upload",
+    "deploy": "hs project deploy",
+    "validate": "hs project validate"
+  },
+  "keywords": [
+    "hubspot",
+    "crm",
+    "sidebar",
+    "quick-links",
+    "oauth"
+  ],
+  "author": "King Henry <marcel@kinghenry.com.au>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@hubspot/ui-extensions": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/King-Henry-AU/quick-links-sidebar.git"
+  }
+}
