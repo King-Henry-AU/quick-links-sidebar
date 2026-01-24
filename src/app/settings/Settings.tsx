@@ -8,6 +8,8 @@ import {
   Divider,
   Alert,
   hubspot,
+  Tabs,
+  Tab,
 } from "@hubspot/ui-extensions";
 
 // Define the settings structure
@@ -19,11 +21,29 @@ interface ButtonSettings {
 }
 
 interface AppSettings {
-  buttons: ButtonSettings[];
+  contactButtons: ButtonSettings[];
+  companyButtons: ButtonSettings[];
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  buttons: [
+  contactButtons: [
+    {
+      urlProperty: "",
+      labelType: "static",
+      staticLabel: "Link 1",
+    },
+    {
+      urlProperty: "",
+      labelType: "static",
+      staticLabel: "Link 2",
+    },
+    {
+      urlProperty: "",
+      labelType: "static",
+      staticLabel: "Link 3",
+    },
+  ],
+  companyButtons: [
     {
       urlProperty: "",
       labelType: "static",
@@ -49,14 +69,24 @@ const Settings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"contacts" | "companies">("contacts");
 
   // Load settings on mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const savedSettings = await hubspot.loadSettings();
-        if (savedSettings && (savedSettings as any).buttons) {
-          setSettings(savedSettings as AppSettings);
+        if (savedSettings) {
+          const loaded = savedSettings as any;
+          // Migrate old single-array format to new format
+          if (loaded.buttons && !loaded.contactButtons && !loaded.companyButtons) {
+            setSettings({
+              contactButtons: loaded.buttons,
+              companyButtons: loaded.buttons,
+            });
+          } else if (loaded.contactButtons || loaded.companyButtons) {
+            setSettings(savedSettings as AppSettings);
+          }
         }
       } catch (err) {
         console.error("Failed to load settings:", err);
@@ -90,29 +120,35 @@ const Settings = () => {
   };
 
   const addButton = () => {
+    const buttonsKey = activeTab === "contacts" ? "contactButtons" : "companyButtons";
+    const currentButtons = settings[buttonsKey];
     setSettings({
       ...settings,
-      buttons: [
-        ...settings.buttons,
+      [buttonsKey]: [
+        ...currentButtons,
         {
           urlProperty: "",
           labelType: "static",
-          staticLabel: `Link ${settings.buttons.length + 1}`,
+          staticLabel: `Link ${currentButtons.length + 1}`,
         },
       ],
     });
   };
 
   const removeButton = (index: number) => {
-    const newButtons = settings.buttons.filter((_, i) => i !== index);
-    setSettings({ ...settings, buttons: newButtons });
+    const buttonsKey = activeTab === "contacts" ? "contactButtons" : "companyButtons";
+    const newButtons = settings[buttonsKey].filter((_, i) => i !== index);
+    setSettings({ ...settings, [buttonsKey]: newButtons });
   };
 
   const updateButton = (index: number, updates: Partial<ButtonSettings>) => {
-    const newButtons = [...settings.buttons];
+    const buttonsKey = activeTab === "contacts" ? "contactButtons" : "companyButtons";
+    const newButtons = [...settings[buttonsKey]];
     newButtons[index] = { ...newButtons[index], ...updates };
-    setSettings({ ...settings, buttons: newButtons });
+    setSettings({ ...settings, [buttonsKey]: newButtons });
   };
+
+  const currentButtons = activeTab === "contacts" ? settings.contactButtons : settings.companyButtons;
 
   return (
     <Flex direction="column" gap="medium">
@@ -140,116 +176,18 @@ const Settings = () => {
 
       <Divider />
 
-      <Flex direction="column" gap="medium">
-        <Text format={{ fontWeight: "demibold" }}>Button Configuration</Text>
-
-        {settings.buttons.map((button, index) => (
-          <Flex key={index} direction="column" gap="small">
-            <Flex direction="row" justify="between" align="center">
-              <Text format={{ fontWeight: "demibold" }}>Button {index + 1}</Text>
-              {settings.buttons.length > 1 && (
-                <Button
-                  onClick={() => removeButton(index)}
-                  variant="secondary"
-                  size="xs"
-                >
-                  Remove
-                </Button>
-              )}
-            </Flex>
-
-            <Flex direction="column" gap="extra-small">
-              <Text variant="microcopy">URL Property Name</Text>
-              <Input
-                name={`url-property-${index}`}
-                value={button.urlProperty}
-                onChange={(value) =>
-                  updateButton(index, { urlProperty: value })
-                }
-                placeholder="e.g., linkedin_url, github_profile, button_url_1"
-              />
-              <Text variant="microcopy">
-                Enter the internal name of the property containing the URL
-              </Text>
-            </Flex>
-
-            <Flex direction="column" gap="extra-small">
-              <Text variant="microcopy">Label Type</Text>
-              <Select
-                name={`label-type-${index}`}
-                value={button.labelType}
-                onChange={(value) =>
-                  updateButton(index, {
-                    labelType: value as "property" | "static",
-                  })
-                }
-                options={[
-                  { label: "Static Text", value: "static" },
-                  { label: "From Property", value: "property" },
-                ]}
-              />
-            </Flex>
-
-            {button.labelType === "static" ? (
-              <Flex direction="column" gap="extra-small">
-                <Text variant="microcopy">Button Label</Text>
-                <Input
-                  name={`static-label-${index}`}
-                  value={button.staticLabel}
-                  onChange={(value) =>
-                    updateButton(index, { staticLabel: value })
-                  }
-                  placeholder="e.g., LinkedIn Profile, View Dashboard"
-                />
-              </Flex>
-            ) : (
-              <Flex direction="column" gap="extra-small">
-                <Text variant="microcopy">Label Property Name</Text>
-                <Input
-                  name={`label-property-${index}`}
-                  value={button.labelProperty || ""}
-                  onChange={(value) =>
-                    updateButton(index, { labelProperty: value })
-                  }
-                  placeholder="e.g., button_label_1, link_title"
-                />
-                <Text variant="microcopy">
-                  Property containing the button label text
-                </Text>
-              </Flex>
-            )}
-
-            {index < settings.buttons.length - 1 && <Divider />}
+      <Tabs value={activeTab} onChange={setActiveTab}>
+        <Tab value="contacts" title="Contact Buttons">
+          <Flex direction="column" gap="medium">
+            {renderButtonConfigurations(currentButtons)}
           </Flex>
-        ))}
-
-        {settings.buttons.length < 10 && (
-          <Button onClick={addButton} variant="secondary" size="sm">
-            + Add Another Button
-          </Button>
-        )}
-      </Flex>
-
-      <Divider />
-
-      <Flex direction="column" gap="small">
-        <Text format={{ fontWeight: "demibold" }}>Instructions</Text>
-        <Text variant="microcopy">
-          1. For each button, enter the internal name of the CRM property that
-          contains the URL (e.g., "linkedin_url").
-        </Text>
-        <Text variant="microcopy">
-          2. Choose whether to use static text or a property for the button
-          label.
-        </Text>
-        <Text variant="microcopy">
-          3. Click Save Settings to apply your changes.
-        </Text>
-        <Text variant="microcopy">
-          4. Buttons will only appear on records where the URL property has a
-          value.
-        </Text>
-      </Flex>
+        </Tab>
+        <Tab value="companies" title="Company Buttons">
+          <Flex direction="column" gap="medium">
+            {renderButtonConfigurations(currentButtons)}
+          </Flex>
+        </Tab>
+      </Tabs>
 
       <Divider />
 
@@ -263,6 +201,112 @@ const Settings = () => {
       </Flex>
     </Flex>
   );
+
+  function renderButtonConfigurations(buttons: ButtonSettings[]) {
+    return (
+      <>
+        <Text format={{ fontWeight: "demibold" }}>Button Configuration</Text>
+
+        {buttons.map((button, index) => (
+          <Flex key={index} direction="column" gap="small">
+            <Flex direction="row" justify="between" align="center">
+              <Text format={{ fontWeight: "demibold" }}>Button {index + 1}</Text>
+              {buttons.length > 1 && (
+                <Button
+                  onClick={() => removeButton(index)}
+                  variant="secondary"
+                  size="xs"
+                >
+                  Remove
+                </Button>
+              )}
+            </Flex>
+
+            <Flex direction="row" gap="small">
+              <Flex direction="column" gap="extra-small" flex={1}>
+                <Text variant="microcopy">URL Property Name</Text>
+                <Input
+                  name={`url-property-${index}`}
+                  value={button.urlProperty}
+                  onChange={(value) =>
+                    updateButton(index, { urlProperty: value })
+                  }
+                  placeholder="e.g., linkedin_url"
+                />
+              </Flex>
+
+              <Flex direction="column" gap="extra-small" flex={1}>
+                <Text variant="microcopy">Label Type</Text>
+                <Select
+                  name={`label-type-${index}`}
+                  value={button.labelType}
+                  onChange={(value) =>
+                    updateButton(index, {
+                      labelType: value as "property" | "static",
+                    })
+                  }
+                  options={[
+                    { label: "Static Text", value: "static" },
+                    { label: "From Property", value: "property" },
+                  ]}
+                />
+              </Flex>
+            </Flex>
+
+            {button.labelType === "static" ? (
+              <Flex direction="column" gap="extra-small">
+                <Text variant="microcopy">Button Label</Text>
+                <Input
+                  name={`static-label-${index}`}
+                  value={button.staticLabel}
+                  onChange={(value) =>
+                    updateButton(index, { staticLabel: value })
+                  }
+                  placeholder="e.g., LinkedIn Profile"
+                />
+              </Flex>
+            ) : (
+              <Flex direction="column" gap="extra-small">
+                <Text variant="microcopy">Label Property Name</Text>
+                <Input
+                  name={`label-property-${index}`}
+                  value={button.labelProperty || ""}
+                  onChange={(value) =>
+                    updateButton(index, { labelProperty: value })
+                  }
+                  placeholder="e.g., button_label_1"
+                />
+              </Flex>
+            )}
+
+            {index < buttons.length - 1 && <Divider />}
+          </Flex>
+        ))}
+
+        {buttons.length < 10 && (
+          <Button onClick={addButton} variant="secondary" size="sm">
+            + Add Another Button
+          </Button>
+        )}
+
+        <Flex direction="column" gap="extra-small">
+          <Text format={{ fontWeight: "demibold" }}>Instructions</Text>
+          <Text variant="microcopy">
+            1. Enter the internal name of the CRM property that contains the URL.
+          </Text>
+          <Text variant="microcopy">
+            2. Choose whether to use static text or a property for the button label.
+          </Text>
+          <Text variant="microcopy">
+            3. Click Save Settings to apply your changes.
+          </Text>
+          <Text variant="microcopy">
+            4. Buttons will only appear on records where the URL property has a value.
+          </Text>
+        </Flex>
+      </>
+    );
+  }
 };
 
 export default Settings;

@@ -19,7 +19,10 @@ interface ButtonSettings {
 }
 
 interface AppSettings {
-  buttons: ButtonSettings[];
+  contactButtons: ButtonSettings[];
+  companyButtons: ButtonSettings[];
+  // Legacy format for backward compatibility
+  buttons?: ButtonSettings[];
 }
 
 // Default fallback configuration (backward compatibility)
@@ -58,15 +61,32 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [settingsError, setSettingsError] = useState<string | null>(null);
 
+  // Detect object type from context
+  const objectType = context.crm?.objectTypeId;
+  const isContact = objectType === "0-1"; // Contact object type
+  const isCompany = objectType === "0-2"; // Company object type
+
   // Load settings on mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const savedSettings = await hubspot.loadSettings();
-        if (savedSettings && (savedSettings as AppSettings).buttons) {
+        if (savedSettings) {
           const settings = savedSettings as AppSettings;
+          let buttonsToUse: ButtonSettings[] = [];
+
+          // Determine which button configuration to use based on object type
+          if (isContact && settings.contactButtons) {
+            buttonsToUse = settings.contactButtons;
+          } else if (isCompany && settings.companyButtons) {
+            buttonsToUse = settings.companyButtons;
+          } else if (settings.buttons) {
+            // Legacy format - use the old single array
+            buttonsToUse = settings.buttons;
+          }
+
           // Filter out buttons with no URL property configured
-          const validButtons = settings.buttons.filter(
+          const validButtons = buttonsToUse.filter(
             (btn) => btn.urlProperty && btn.urlProperty.trim() !== ""
           );
           setButtonConfigs(
@@ -88,7 +108,7 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
       }
     };
     loadSettings();
-  }, []);
+  }, [isContact, isCompany]);
 
   // Build list of properties to fetch based on button configs
   const propertiesToFetch = buttonConfigs.flatMap((config) => {
