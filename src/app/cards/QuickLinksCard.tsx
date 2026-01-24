@@ -211,6 +211,19 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
           </CrmActionButton>
         ))}
       </Flex>
+      <Flex direction="row" justify="center">
+        <Text variant="microcopy">
+          Powered by{" "}
+          <a
+            href="https://kinghenry.com.au"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#0091ae", textDecoration: "none" }}
+          >
+            King Henry
+          </a>
+        </Text>
+      </Flex>
     </Flex>
   );
 };

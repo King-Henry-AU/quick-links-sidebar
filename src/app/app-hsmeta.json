@@ -1,14 +1,14 @@
 {
-  "uid": "record_view_sidebar_buttons_app",
+  "uid": "sidebar_quick_links_app",
   "type": "app",
   "config": {
     "description": "Displays configurable quick link buttons in the CRM record sidebar. Buttons link to URLs stored in custom properties, allowing dynamic navigation to external systems, profiles, or dashboards directly from contact and company records.",
-    "name": "Quick Links Sidebar",
+    "name": "Sidebar Quick Links",
     "distribution": "marketplace",
     "auth": {
       "type": "oauth",
       "redirectUrls": [
-        "https://oauth.kinghenry.au/oauth/callback"
+        "https://oauth.kinghenry.au/oauth/callback/sidebar_quick_links"
       ],
       "requiredScopes": [
         "oauth",
