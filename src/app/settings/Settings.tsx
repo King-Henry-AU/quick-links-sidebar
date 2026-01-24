@@ -151,9 +151,29 @@ const Settings = ({ context }: SettingsProps) => {
     }
 
     try {
-      console.log("=== CALLING DEBUG ENDPOINT ===");
+      console.log("=== DEBUG INFO ===");
+      console.log("Portal ID:", portalId);
+      console.log("Settings to save:", JSON.stringify(settings, null, 2));
+
+      // Test 1: Check if backend is reachable
+      console.log("\n=== TEST 1: Health Check ===");
+      try {
+        const healthResponse = await hubspot.fetch(
+          `https://oauth.kinghenry.au/health`
+        );
+        console.log("Health check status:", healthResponse.status);
+        if (healthResponse.ok) {
+          const healthData = await healthResponse.json();
+          console.log("Health data:", JSON.stringify(healthData, null, 2));
+        }
+      } catch (err) {
+        console.error("Health check failed:", err);
+      }
+
+      // Test 2: Try the actual settings endpoint
+      console.log("\n=== TEST 2: Settings Endpoint ===");
       const response = await hubspot.fetch(
-        `https://oauth.kinghenry.au/debug`,
+        `https://oauth.kinghenry.au/api/settings/${portalId}`,
         {
           method: "POST",
           headers: {
@@ -163,13 +183,21 @@ const Settings = ({ context }: SettingsProps) => {
         }
       );
 
-      console.log("Debug response status:", response.status);
-      const data = await response.json();
-      console.log("Debug response:", JSON.stringify(data, null, 2));
-      alert("Debug info logged to console - press F12 to view");
+      console.log("Settings POST status:", response.status);
+      console.log("Response headers:", JSON.stringify(Object.fromEntries(response.headers.entries())));
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("SUCCESS! Response:", JSON.stringify(data, null, 2));
+        setError("✓ Check console - request succeeded!");
+      } else {
+        const text = await response.text();
+        console.error("FAILED! Response body:", text);
+        setError(`Debug failed with status ${response.status} - check console`);
+      }
     } catch (error) {
       console.error("Debug error:", error);
-      alert("Debug failed - check console");
+      setError(`Debug error: ${error.message}`);
     }
   };
 
