@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { hubspot } from "@hubspot/ui-extensions";
+import {
+  Flex,
+  Text,
+  Button,
+  Input,
+  Select,
+  Divider,
+  Alert,
+  hubspot,
+} from "@hubspot/ui-extensions";
 
 // Define the settings structure
 interface ButtonSettings {
@@ -51,7 +60,6 @@ const Settings = () => {
         }
       } catch (err) {
         console.error("Failed to load settings:", err);
-        // Silently fail and use defaults - settings might not exist yet
       }
     };
     loadSettings().catch(err => {
@@ -107,247 +115,153 @@ const Settings = () => {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px" }}>
-      <div style={{ marginBottom: "24px" }}>
-        <h2 style={{ margin: "0 0 8px 0", fontSize: "18px", fontWeight: "600" }}>
+    <Flex direction="column" gap="medium">
+      <Flex direction="column" gap="small">
+        <Text variant="microcopy" format={{ fontWeight: "bold" }}>
           Quick Links Configuration
-        </h2>
-        <p style={{ margin: "0", color: "#666", fontSize: "14px" }}>
+        </Text>
+        <Text>
           Configure which CRM properties to use for quick link buttons. These
           buttons will appear in the sidebar of contact and company records.
-        </p>
-      </div>
+        </Text>
+      </Flex>
 
       {saveSuccess && (
-        <div style={{
-          padding: "12px",
-          marginBottom: "16px",
-          backgroundColor: "#e8f5e9",
-          border: "1px solid #4caf50",
-          borderRadius: "4px",
-          color: "#2e7d32"
-        }}>
-          <strong>✓ Settings saved successfully</strong>
-          <p style={{ margin: "4px 0 0 0", fontSize: "14px" }}>
-            Your quick links configuration has been saved.
-          </p>
-        </div>
+        <Alert title="Settings saved successfully" variant="success">
+          Your quick links configuration has been saved.
+        </Alert>
       )}
 
       {error && (
-        <div style={{
-          padding: "12px",
-          marginBottom: "16px",
-          backgroundColor: "#ffebee",
-          border: "1px solid #f44336",
-          borderRadius: "4px",
-          color: "#c62828"
-        }}>
-          <strong>✗ Error saving settings</strong>
-          <p style={{ margin: "4px 0 0 0", fontSize: "14px" }}>{error}</p>
-        </div>
+        <Alert title="Error saving settings" variant="error">
+          {error}
+        </Alert>
       )}
 
-      <hr style={{ margin: "24px 0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+      <Divider />
 
-      <div>
-        <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "600" }}>
-          Button Configuration
-        </h3>
+      <Flex direction="column" gap="medium">
+        <Text format={{ fontWeight: "demibold" }}>Button Configuration</Text>
 
         {settings.buttons.map((button, index) => (
-          <div key={index} style={{
-            padding: "16px",
-            marginBottom: "16px",
-            border: "1px solid #e0e0e0",
-            borderRadius: "4px",
-            backgroundColor: "#f9f9f9"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <strong style={{ fontSize: "15px" }}>Button {index + 1}</strong>
+          <Flex key={index} direction="column" gap="small">
+            <Flex direction="row" justify="between" align="center">
+              <Text format={{ fontWeight: "demibold" }}>Button {index + 1}</Text>
               {settings.buttons.length > 1 && (
-                <button
+                <Button
                   onClick={() => removeButton(index)}
-                  style={{
-                    padding: "4px 12px",
-                    fontSize: "13px",
-                    backgroundColor: "#fff",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    cursor: "pointer"
-                  }}
+                  variant="secondary"
+                  size="xs"
                 >
                   Remove
-                </button>
+                </Button>
               )}
-            </div>
+            </Flex>
 
-            <div style={{ marginBottom: "12px" }}>
-              <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: "500" }}>
-                URL Property Name
-              </label>
-              <input
-                type="text"
+            <Flex direction="column" gap="extra-small">
+              <Text variant="microcopy">URL Property Name</Text>
+              <Input
+                name={`url-property-${index}`}
                 value={button.urlProperty}
-                onChange={(e) => updateButton(index, { urlProperty: e.target.value })}
+                onChange={(value) =>
+                  updateButton(index, { urlProperty: value })
+                }
                 placeholder="e.g., linkedin_url, github_profile, button_url_1"
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  fontSize: "14px",
-                  border: "1px solid #ccc",
-                  borderRadius: "3px",
-                  boxSizing: "border-box"
-                }}
               />
-              <small style={{ display: "block", marginTop: "4px", color: "#666", fontSize: "12px" }}>
+              <Text variant="microcopy">
                 Enter the internal name of the property containing the URL
-              </small>
-            </div>
+              </Text>
+            </Flex>
 
-            <div style={{ marginBottom: "12px" }}>
-              <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: "500" }}>
-                Label Type
-              </label>
-              <select
+            <Flex direction="column" gap="extra-small">
+              <Text variant="microcopy">Label Type</Text>
+              <Select
+                name={`label-type-${index}`}
                 value={button.labelType}
-                onChange={(e) => updateButton(index, { labelType: e.target.value as "property" | "static" })}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  fontSize: "14px",
-                  border: "1px solid #ccc",
-                  borderRadius: "3px",
-                  boxSizing: "border-box"
-                }}
-              >
-                <option value="static">Static Text</option>
-                <option value="property">From Property</option>
-              </select>
-            </div>
+                onChange={(value) =>
+                  updateButton(index, {
+                    labelType: value as "property" | "static",
+                  })
+                }
+                options={[
+                  { label: "Static Text", value: "static" },
+                  { label: "From Property", value: "property" },
+                ]}
+              />
+            </Flex>
 
             {button.labelType === "static" ? (
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: "500" }}>
-                  Button Label
-                </label>
-                <input
-                  type="text"
+              <Flex direction="column" gap="extra-small">
+                <Text variant="microcopy">Button Label</Text>
+                <Input
+                  name={`static-label-${index}`}
                   value={button.staticLabel}
-                  onChange={(e) => updateButton(index, { staticLabel: e.target.value })}
+                  onChange={(value) =>
+                    updateButton(index, { staticLabel: value })
+                  }
                   placeholder="e.g., LinkedIn Profile, View Dashboard"
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    fontSize: "14px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    boxSizing: "border-box"
-                  }}
                 />
-              </div>
+              </Flex>
             ) : (
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: "500" }}>
-                  Label Property Name
-                </label>
-                <input
-                  type="text"
+              <Flex direction="column" gap="extra-small">
+                <Text variant="microcopy">Label Property Name</Text>
+                <Input
+                  name={`label-property-${index}`}
                   value={button.labelProperty || ""}
-                  onChange={(e) => updateButton(index, { labelProperty: e.target.value })}
+                  onChange={(value) =>
+                    updateButton(index, { labelProperty: value })
+                  }
                   placeholder="e.g., button_label_1, link_title"
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    fontSize: "14px",
-                    border: "1px solid #ccc",
-                    borderRadius: "3px",
-                    boxSizing: "border-box"
-                  }}
                 />
-                <small style={{ display: "block", marginTop: "4px", color: "#666", fontSize: "12px" }}>
+                <Text variant="microcopy">
                   Property containing the button label text
-                </small>
-              </div>
+                </Text>
+              </Flex>
             )}
-          </div>
+
+            {index < settings.buttons.length - 1 && <Divider />}
+          </Flex>
         ))}
 
         {settings.buttons.length < 10 && (
-          <button
-            onClick={addButton}
-            style={{
-              padding: "8px 16px",
-              fontSize: "14px",
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
-              borderRadius: "3px",
-              cursor: "pointer",
-              marginBottom: "16px"
-            }}
-          >
+          <Button onClick={addButton} variant="secondary" size="sm">
             + Add Another Button
-          </button>
+          </Button>
         )}
-      </div>
+      </Flex>
 
-      <hr style={{ margin: "24px 0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+      <Divider />
 
-      <div style={{ marginBottom: "24px" }}>
-        <h3 style={{ margin: "0 0 12px 0", fontSize: "16px", fontWeight: "600" }}>
-          Instructions
-        </h3>
-        <ol style={{ margin: "0", paddingLeft: "20px", color: "#666", fontSize: "14px" }}>
-          <li style={{ marginBottom: "8px" }}>
-            For each button, enter the <strong>internal name</strong> of the CRM property that contains the URL (e.g., "linkedin_url").
-          </li>
-          <li style={{ marginBottom: "8px" }}>
-            Choose whether to use static text or a property for the button label.
-          </li>
-          <li style={{ marginBottom: "8px" }}>
-            Click <strong>Save Settings</strong> to apply your changes.
-          </li>
-          <li style={{ marginBottom: "8px" }}>
-            Buttons will only appear on records where the URL property has a value.
-          </li>
-        </ol>
-      </div>
+      <Flex direction="column" gap="small">
+        <Text format={{ fontWeight: "demibold" }}>Instructions</Text>
+        <Text variant="microcopy">
+          1. For each button, enter the internal name of the CRM property that
+          contains the URL (e.g., "linkedin_url").
+        </Text>
+        <Text variant="microcopy">
+          2. Choose whether to use static text or a property for the button
+          label.
+        </Text>
+        <Text variant="microcopy">
+          3. Click Save Settings to apply your changes.
+        </Text>
+        <Text variant="microcopy">
+          4. Buttons will only appear on records where the URL property has a
+          value.
+        </Text>
+      </Flex>
 
-      <hr style={{ margin: "24px 0", border: "none", borderTop: "1px solid #e0e0e0" }} />
+      <Divider />
 
-      <div style={{ display: "flex", gap: "12px" }}>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          style={{
-            padding: "10px 20px",
-            fontSize: "14px",
-            fontWeight: "500",
-            backgroundColor: isSaving ? "#ccc" : "#0091ae",
-            color: "#fff",
-            border: "none",
-            borderRadius: "3px",
-            cursor: isSaving ? "not-allowed" : "pointer"
-          }}
-        >
+      <Flex direction="row" gap="small">
+        <Button onClick={handleSave} variant="primary" disabled={isSaving}>
           {isSaving ? "Saving..." : "Save Settings"}
-        </button>
-        <button
-          onClick={handleReset}
-          disabled={isSaving}
-          style={{
-            padding: "10px 20px",
-            fontSize: "14px",
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            borderRadius: "3px",
-            cursor: isSaving ? "not-allowed" : "pointer"
-          }}
-        >
+        </Button>
+        <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
           Reset to Defaults
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Flex>
+    </Flex>
   );
 };
 
