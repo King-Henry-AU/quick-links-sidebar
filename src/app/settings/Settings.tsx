@@ -27,40 +27,8 @@ interface AppSettings {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  contactButtons: [
-    {
-      urlProperty: "",
-      labelType: "static",
-      staticLabel: "Link 1",
-    },
-    {
-      urlProperty: "",
-      labelType: "static",
-      staticLabel: "Link 2",
-    },
-    {
-      urlProperty: "",
-      labelType: "static",
-      staticLabel: "Link 3",
-    },
-  ],
-  companyButtons: [
-    {
-      urlProperty: "",
-      labelType: "static",
-      staticLabel: "Link 1",
-    },
-    {
-      urlProperty: "",
-      labelType: "static",
-      staticLabel: "Link 2",
-    },
-    {
-      urlProperty: "",
-      labelType: "static",
-      staticLabel: "Link 3",
-    },
-  ],
+  contactButtons: [],
+  companyButtons: [],
 };
 
 hubspot.extend(({ context }) => <Settings context={context} />);
