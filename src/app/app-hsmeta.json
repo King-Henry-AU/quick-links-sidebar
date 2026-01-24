@@ -19,11 +19,7 @@
       "conditionallyRequiredScopes": []
     },
     "permittedUrls": {
-      "fetch": [
-        "https://oauth.kinghenry.au",
-        "https://oauth.kinghenry.au/health",
-        "https://oauth.kinghenry.au/api/settings/*"
-      ],
+      "fetch": ["https://oauth.kinghenry.au"],
       "iframe": [],
       "img": []
     },

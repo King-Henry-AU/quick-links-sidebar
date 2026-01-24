@@ -153,6 +153,7 @@ const Settings = ({ context }: SettingsProps) => {
     try {
       console.log("=== DEBUG INFO ===");
       console.log("Portal ID:", portalId);
+      console.log("Context:", JSON.stringify(context, null, 2));
       console.log("Settings to save:", JSON.stringify(settings, null, 2));
 
       // Test 1: Check if backend is reachable
@@ -170,8 +171,23 @@ const Settings = ({ context }: SettingsProps) => {
         console.error("Health check failed:", err);
       }
 
-      // Test 2: Try the actual settings endpoint
-      console.log("\n=== TEST 2: Settings Endpoint ===");
+      // Test 2: Try GET endpoint with path param (like health check)
+      console.log("\n=== TEST 2: GET with Path Param ===");
+      try {
+        const getTestResponse = await hubspot.fetch(
+          `https://oauth.kinghenry.au/api/settings-test/${portalId}`
+        );
+        console.log("GET test status:", getTestResponse.status);
+        if (getTestResponse.ok) {
+          const data = await getTestResponse.json();
+          console.log("GET test works!", data);
+        }
+      } catch (err) {
+        console.error("GET test failed:", err);
+      }
+
+      // Test 3: Try the actual POST settings endpoint
+      console.log("\n=== TEST 3: POST Settings Endpoint ===");
       const response = await hubspot.fetch(
         `https://oauth.kinghenry.au/api/settings/${portalId}`,
         {
