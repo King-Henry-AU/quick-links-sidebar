@@ -144,6 +144,35 @@ const Settings = ({ context }: SettingsProps) => {
     setError(null);
   };
 
+  const handleDebug = async () => {
+    if (!portalId) {
+      setError("Portal ID not available");
+      return;
+    }
+
+    try {
+      console.log("=== CALLING DEBUG ENDPOINT ===");
+      const response = await hubspot.fetch(
+        `https://oauth.kinghenry.au/debug`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ settings }),
+        }
+      );
+
+      console.log("Debug response status:", response.status);
+      const data = await response.json();
+      console.log("Debug response:", JSON.stringify(data, null, 2));
+      alert("Debug info logged to console - press F12 to view");
+    } catch (error) {
+      console.error("Debug error:", error);
+      alert("Debug failed - check console");
+    }
+  };
+
   const addButton = () => {
     const buttonsKey = activeTab === "contacts" ? "contactButtons" : "companyButtons";
     const currentButtons = settings[buttonsKey];
@@ -335,6 +364,9 @@ const Settings = ({ context }: SettingsProps) => {
         </Button>
         <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
           Reset to Defaults
+        </Button>
+        <Button onClick={handleDebug} variant="secondary" disabled={isSaving}>
+          Debug Request
         </Button>
       </Flex>
     </Flex>
