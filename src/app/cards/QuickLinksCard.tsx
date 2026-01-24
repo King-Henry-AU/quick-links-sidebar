@@ -68,11 +68,11 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
 
   // Load settings on mount
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadSettings = () => {
       try {
-        const savedSettings = await hubspot.loadSettings();
-        if (savedSettings) {
-          const settings = savedSettings as AppSettings;
+        const savedData = localStorage.getItem("sidebar_quick_links_settings");
+        if (savedData) {
+          const settings = JSON.parse(savedData) as AppSettings;
           let buttonsToUse: ButtonSettings[] = [];
 
           // Determine which button configuration to use based on object type

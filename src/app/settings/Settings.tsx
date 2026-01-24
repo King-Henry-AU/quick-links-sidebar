@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Flex,
   Text,
@@ -66,50 +66,20 @@ hubspot.extend(() => <Settings />);
 
 const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"contacts" | "companies">("contacts");
+  const [activeTab, setActiveTab] = useState<string>("contacts");
 
-  // Load settings on mount
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const savedSettings = await hubspot.loadSettings();
-        if (savedSettings) {
-          const loaded = savedSettings as any;
-          // Migrate old single-array format to new format
-          if (loaded.buttons && !loaded.contactButtons && !loaded.companyButtons) {
-            setSettings({
-              contactButtons: loaded.buttons,
-              companyButtons: loaded.buttons,
-            });
-          } else if (loaded.contactButtons || loaded.companyButtons) {
-            setSettings(savedSettings as AppSettings);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load settings:", err);
-      }
-    };
-    loadSettings().catch(err => {
-      console.error("Settings load error:", err);
-    });
-  }, []);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setSaveSuccess(false);
-    setError(null);
-
+  const handleSave = () => {
     try {
-      await hubspot.saveSettings(settings);
+      // Save to localStorage since new platform doesn't have built-in settings storage
+      localStorage.setItem("sidebar_quick_links_settings", JSON.stringify(settings));
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save settings");
-    } finally {
-      setIsSaving(false);
+      setSaveSuccess(false);
     }
   };
 
@@ -280,13 +250,13 @@ const Settings = () => {
 
       <Divider />
 
-      <Tabs value={activeTab} onChange={setActiveTab}>
-        <Tab value="contacts" title="Contact Buttons">
+      <Tabs selected={activeTab} onSelectedChange={setActiveTab}>
+        <Tab tabId="contacts" title="Contact Buttons">
           <Flex direction="column" gap="medium">
             {renderButtonConfigurations(settings.contactButtons)}
           </Flex>
         </Tab>
-        <Tab value="companies" title="Company Buttons">
+        <Tab tabId="companies" title="Company Buttons">
           <Flex direction="column" gap="medium">
             {renderButtonConfigurations(settings.companyButtons)}
           </Flex>
@@ -296,10 +266,10 @@ const Settings = () => {
       <Divider />
 
       <Flex direction="row" gap="small">
-        <Button onClick={handleSave} variant="primary" disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Settings"}
+        <Button onClick={handleSave} variant="primary">
+          Save Settings
         </Button>
-        <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
+        <Button onClick={handleReset} variant="secondary">
           Reset to Defaults
         </Button>
       </Flex>
