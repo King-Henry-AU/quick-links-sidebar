@@ -125,6 +125,9 @@ const Settings = ({ context }: SettingsProps) => {
     setError(null);
 
     try {
+      console.log("Saving settings for portal:", portalId);
+      console.log("Settings:", JSON.stringify(settings).substring(0, 200));
+
       const response = await hubspot.fetch(
         `https://oauth.kinghenry.au/api/settings/${portalId}`,
         {
@@ -136,15 +139,30 @@ const Settings = ({ context }: SettingsProps) => {
         }
       );
 
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log("Save successful:", data);
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Failed to save settings");
+        // Try to parse error response, but handle cases where body is empty
+        let errorMessage = "Failed to save settings";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error("Save failed:", errorData);
+        } catch (parseError) {
+          console.error("Could not parse error response:", parseError);
+          errorMessage = `Server error (${response.status})`;
+        }
+        setError(errorMessage);
         setSaveSuccess(false);
       }
     } catch (err) {
+      console.error("Error saving settings:", err);
       setError(err instanceof Error ? err.message : "Failed to save settings");
       setSaveSuccess(false);
     } finally {
