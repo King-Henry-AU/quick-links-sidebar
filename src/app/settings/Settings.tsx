@@ -96,15 +96,12 @@ const Settings = ({ context }: SettingsProps) => {
       console.log("Saving settings for portal:", portalId);
       console.log("Settings:", JSON.stringify(settings).substring(0, 200));
 
+      // Encode settings as base64 (HubSpot blocks POST requests)
+      const settingsJson = JSON.stringify(settings);
+      const base64Settings = btoa(settingsJson);
+
       const response = await hubspot.fetch(
-        `https://oauth.kinghenry.au/api/settings/${portalId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ settings }),
-        }
+        `https://oauth.kinghenry.au/api/settings/${portalId}/save?data=${encodeURIComponent(base64Settings)}`
       );
 
       console.log("Response status:", response.status);
