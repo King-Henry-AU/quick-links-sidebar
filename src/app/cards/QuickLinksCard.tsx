@@ -65,39 +65,57 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
   const objectType = context.crm?.objectTypeId;
   const isContact = objectType === "0-1"; // Contact object type
   const isCompany = objectType === "0-2"; // Company object type
+  const portalId = context.portal?.id;
 
-  // Load settings on mount
+  // Load settings from API on mount
   useEffect(() => {
-    const loadSettings = () => {
+    const loadSettings = async () => {
+      if (!portalId) {
+        console.error("Portal ID not available");
+        setButtonConfigs(DEFAULT_BUTTON_CONFIGS);
+        setIsLoadingSettings(false);
+        return;
+      }
+
       try {
-        const savedData = localStorage.getItem("sidebar_quick_links_settings");
-        if (savedData) {
-          const settings = JSON.parse(savedData) as AppSettings;
-          let buttonsToUse: ButtonSettings[] = [];
+        const response = await hubspot.fetch(
+          `https://oauth.kinghenry.au/api/settings/${portalId}`
+        );
 
-          // Determine which button configuration to use based on object type
-          if (isContact && settings.contactButtons) {
-            buttonsToUse = settings.contactButtons;
-          } else if (isCompany && settings.companyButtons) {
-            buttonsToUse = settings.companyButtons;
-          } else if (settings.buttons) {
-            // Legacy format - use the old single array
-            buttonsToUse = settings.buttons;
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.settings) {
+            const settings = data.settings as AppSettings;
+            let buttonsToUse: ButtonSettings[] = [];
+
+            // Determine which button configuration to use based on object type
+            if (isContact && settings.contactButtons) {
+              buttonsToUse = settings.contactButtons;
+            } else if (isCompany && settings.companyButtons) {
+              buttonsToUse = settings.companyButtons;
+            } else if (settings.buttons) {
+              // Legacy format - use the old single array
+              buttonsToUse = settings.buttons;
+            }
+
+            // Filter out buttons with no URL property configured
+            const validButtons = buttonsToUse.filter(
+              (btn) => btn.urlProperty && btn.urlProperty.trim() !== ""
+            );
+            setButtonConfigs(
+              validButtons.length > 0 ? validButtons : DEFAULT_BUTTON_CONFIGS
+            );
           }
-
-          // Filter out buttons with no URL property configured
-          const validButtons = buttonsToUse.filter(
-            (btn) => btn.urlProperty && btn.urlProperty.trim() !== ""
-          );
-          setButtonConfigs(
-            validButtons.length > 0 ? validButtons : DEFAULT_BUTTON_CONFIGS
-          );
+        } else if (response.status === 404) {
+          // No settings found, use defaults
+          console.log("No settings found, using defaults");
+          setButtonConfigs(DEFAULT_BUTTON_CONFIGS);
         } else {
-          // No settings configured, use defaults
+          console.error("Failed to load settings:", response.status);
           setButtonConfigs(DEFAULT_BUTTON_CONFIGS);
         }
       } catch (err) {
-        console.error("Failed to load settings:", err);
+        console.error("Error loading settings:", err);
         setSettingsError(
           err instanceof Error ? err.message : "Failed to load settings"
         );
@@ -107,8 +125,9 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
         setIsLoadingSettings(false);
       }
     };
+
     loadSettings();
-  }, [isContact, isCompany]);
+  }, [isContact, isCompany, portalId]);
 
   // Build list of properties to fetch based on button configs
   const propertiesToFetch = buttonConfigs.flatMap((config) => {

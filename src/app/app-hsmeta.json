@@ -19,7 +19,7 @@
       "conditionallyRequiredScopes": []
     },
     "permittedUrls": {
-      "fetch": [],
+      "fetch": ["https://oauth.kinghenry.au"],
       "iframe": [],
       "img": []
     },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Flex,
   Text,
@@ -10,6 +10,7 @@ import {
   hubspot,
   Tabs,
   Tab,
+  LoadingSpinner,
 } from "@hubspot/ui-extensions";
 
 // Define the settings structure
@@ -62,24 +63,92 @@ const DEFAULT_SETTINGS: AppSettings = {
   ],
 };
 
-hubspot.extend(() => <Settings />);
+hubspot.extend(({ context }) => <Settings context={context} />);
 
-const Settings = () => {
+interface SettingsProps {
+  context: any;
+}
+
+const Settings = ({ context }: SettingsProps) => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("contacts");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const portalId = context.portal?.id;
+
+  // Load settings from API on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!portalId) {
+        setError("Portal ID not available");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await hubspot.fetch(
+          `https://oauth.kinghenry.au/api/settings/${portalId}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.settings) {
+            setSettings(data.settings);
+          }
+        } else if (response.status === 404) {
+          // No settings found, use defaults
+          console.log("No settings found, using defaults");
+        } else {
+          console.error("Failed to load settings:", response.status);
+        }
+      } catch (err) {
+        console.error("Error loading settings:", err);
+        // Silently fail and use defaults
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [portalId]);
+
+  const handleSave = async () => {
+    if (!portalId) {
+      setError("Portal ID not available");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
     try {
-      // Save to localStorage since new platform doesn't have built-in settings storage
-      localStorage.setItem("sidebar_quick_links_settings", JSON.stringify(settings));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      setError(null);
+      const response = await hubspot.fetch(
+        `https://oauth.kinghenry.au/api/settings/${portalId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ settings }),
+        }
+      );
+
+      if (response.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Failed to save settings");
+        setSaveSuccess(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save settings");
       setSaveSuccess(false);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -224,6 +293,15 @@ const Settings = () => {
     );
   };
 
+  // Show loading state while fetching settings
+  if (isLoading) {
+    return (
+      <Flex direction="column" align="center" gap="medium">
+        <LoadingSpinner label="Loading settings..." />
+      </Flex>
+    );
+  }
+
   return (
     <Flex direction="column" gap="medium">
       <Flex direction="column" gap="small">
@@ -266,10 +344,10 @@ const Settings = () => {
       <Divider />
 
       <Flex direction="row" gap="small">
-        <Button onClick={handleSave} variant="primary">
-          Save Settings
+        <Button onClick={handleSave} variant="primary" disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Settings"}
         </Button>
-        <Button onClick={handleReset} variant="secondary">
+        <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
           Reset to Defaults
         </Button>
       </Flex>
