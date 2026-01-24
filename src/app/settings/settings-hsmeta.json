@@ -2,8 +2,6 @@
   "uid": "record_view_sidebar_buttons_settings",
   "type": "settings",
   "config": {
-    "name": "Quick Links Settings",
-    "description": "Configure which properties to use for quick link buttons",
     "entrypoint": "/app/settings/Settings.tsx"
   }
 }
