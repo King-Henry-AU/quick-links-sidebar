@@ -33,13 +33,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   ],
 };
 
-hubspot.extend(({ actions }) => <Settings actions={actions} />);
+hubspot.extend(() => <Settings />);
 
-interface SettingsProps {
-  actions?: any;
-}
-
-const Settings = ({ actions }: SettingsProps) => {
+const Settings = () => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -50,14 +46,17 @@ const Settings = ({ actions }: SettingsProps) => {
     const loadSettings = async () => {
       try {
         const savedSettings = await hubspot.loadSettings();
-        if (savedSettings && savedSettings.buttons) {
+        if (savedSettings && (savedSettings as any).buttons) {
           setSettings(savedSettings as AppSettings);
         }
       } catch (err) {
         console.error("Failed to load settings:", err);
+        // Silently fail and use defaults - settings might not exist yet
       }
     };
-    loadSettings();
+    loadSettings().catch(err => {
+      console.error("Settings load error:", err);
+    });
   }, []);
 
   const handleSave = async () => {
