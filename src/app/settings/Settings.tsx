@@ -148,61 +148,7 @@ const Settings = () => {
     setSettings({ ...settings, [buttonsKey]: newButtons });
   };
 
-  const currentButtons = activeTab === "contacts" ? settings.contactButtons : settings.companyButtons;
-
-  return (
-    <Flex direction="column" gap="medium">
-      <Flex direction="column" gap="small">
-        <Text variant="microcopy" format={{ fontWeight: "bold" }}>
-          Quick Links Configuration
-        </Text>
-        <Text>
-          Configure which CRM properties to use for quick link buttons. These
-          buttons will appear in the sidebar of contact and company records.
-        </Text>
-      </Flex>
-
-      {saveSuccess && (
-        <Alert title="Settings saved successfully" variant="success">
-          Your quick links configuration has been saved.
-        </Alert>
-      )}
-
-      {error && (
-        <Alert title="Error saving settings" variant="error">
-          {error}
-        </Alert>
-      )}
-
-      <Divider />
-
-      <Tabs value={activeTab} onChange={setActiveTab}>
-        <Tab value="contacts" title="Contact Buttons">
-          <Flex direction="column" gap="medium">
-            {renderButtonConfigurations(currentButtons)}
-          </Flex>
-        </Tab>
-        <Tab value="companies" title="Company Buttons">
-          <Flex direction="column" gap="medium">
-            {renderButtonConfigurations(currentButtons)}
-          </Flex>
-        </Tab>
-      </Tabs>
-
-      <Divider />
-
-      <Flex direction="row" gap="small">
-        <Button onClick={handleSave} variant="primary" disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Settings"}
-        </Button>
-        <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
-          Reset to Defaults
-        </Button>
-      </Flex>
-    </Flex>
-  );
-
-  function renderButtonConfigurations(buttons: ButtonSettings[]) {
+  const renderButtonConfigurations = (buttons: ButtonSettings[]) => {
     return (
       <>
         <Text format={{ fontWeight: "demibold" }}>Button Configuration</Text>
@@ -306,7 +252,59 @@ const Settings = () => {
         </Flex>
       </>
     );
-  }
+  };
+
+  return (
+    <Flex direction="column" gap="medium">
+      <Flex direction="column" gap="small">
+        <Text variant="microcopy" format={{ fontWeight: "bold" }}>
+          Quick Links Configuration
+        </Text>
+        <Text>
+          Configure which CRM properties to use for quick link buttons. These
+          buttons will appear in the sidebar of contact and company records.
+        </Text>
+      </Flex>
+
+      {saveSuccess && (
+        <Alert title="Settings saved successfully" variant="success">
+          Your quick links configuration has been saved.
+        </Alert>
+      )}
+
+      {error && (
+        <Alert title="Error saving settings" variant="error">
+          {error}
+        </Alert>
+      )}
+
+      <Divider />
+
+      <Tabs value={activeTab} onChange={setActiveTab}>
+        <Tab value="contacts" title="Contact Buttons">
+          <Flex direction="column" gap="medium">
+            {renderButtonConfigurations(settings.contactButtons)}
+          </Flex>
+        </Tab>
+        <Tab value="companies" title="Company Buttons">
+          <Flex direction="column" gap="medium">
+            {renderButtonConfigurations(settings.companyButtons)}
+          </Flex>
+        </Tab>
+      </Tabs>
+
+      <Divider />
+
+      <Flex direction="row" gap="small">
+        <Button onClick={handleSave} variant="primary" disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Settings"}
+        </Button>
+        <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
+          Reset to Defaults
+        </Button>
+      </Flex>
+    </Flex>
+  );
 };
 
 export default Settings;
