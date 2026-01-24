@@ -33,9 +33,13 @@ const DEFAULT_SETTINGS: AppSettings = {
   ],
 };
 
-hubspot.extend(() => <Settings />);
+hubspot.extend(({ actions }) => <Settings actions={actions} />);
 
-const Settings = () => {
+interface SettingsProps {
+  actions?: any;
+}
+
+const Settings = ({ actions }: SettingsProps) => {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
