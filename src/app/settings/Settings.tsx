@@ -141,79 +141,6 @@ const Settings = ({ context }: SettingsProps) => {
     setError(null);
   };
 
-  const handleDebug = async () => {
-    if (!portalId) {
-      setError("Portal ID not available");
-      return;
-    }
-
-    try {
-      console.log("=== DEBUG INFO ===");
-      console.log("Portal ID:", portalId);
-      console.log("Context:", JSON.stringify(context, null, 2));
-      console.log("Settings to save:", JSON.stringify(settings, null, 2));
-
-      // Test 1: Check if backend is reachable
-      console.log("\n=== TEST 1: Health Check ===");
-      try {
-        const healthResponse = await hubspot.fetch(
-          `https://oauth.kinghenry.au/health`
-        );
-        console.log("Health check status:", healthResponse.status);
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          console.log("Health data:", JSON.stringify(healthData, null, 2));
-        }
-      } catch (err) {
-        console.error("Health check failed:", err);
-      }
-
-      // Test 2: Try GET endpoint with path param (like health check)
-      console.log("\n=== TEST 2: GET with Path Param ===");
-      try {
-        const getTestResponse = await hubspot.fetch(
-          `https://oauth.kinghenry.au/api/settings-test/${portalId}`
-        );
-        console.log("GET test status:", getTestResponse.status);
-        if (getTestResponse.ok) {
-          const data = await getTestResponse.json();
-          console.log("GET test works!", data);
-        }
-      } catch (err) {
-        console.error("GET test failed:", err);
-      }
-
-      // Test 3: Try the actual POST settings endpoint
-      console.log("\n=== TEST 3: POST Settings Endpoint ===");
-      const response = await hubspot.fetch(
-        `https://oauth.kinghenry.au/api/settings/${portalId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ settings }),
-        }
-      );
-
-      console.log("Settings POST status:", response.status);
-      console.log("Response headers:", JSON.stringify(Object.fromEntries(response.headers.entries())));
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("SUCCESS! Response:", JSON.stringify(data, null, 2));
-        setError("✓ Check console - request succeeded!");
-      } else {
-        const text = await response.text();
-        console.error("FAILED! Response body:", text);
-        setError(`Debug failed with status ${response.status} - check console`);
-      }
-    } catch (error) {
-      console.error("Debug error:", error);
-      setError(`Debug error: ${error.message}`);
-    }
-  };
-
   const addButton = () => {
     const buttonsKey = activeTab === "contacts" ? "contactButtons" : "companyButtons";
     const currentButtons = settings[buttonsKey];
@@ -405,9 +332,6 @@ const Settings = ({ context }: SettingsProps) => {
         </Button>
         <Button onClick={handleReset} variant="secondary" disabled={isSaving}>
           Reset to Defaults
-        </Button>
-        <Button onClick={handleDebug} variant="secondary" disabled={isSaving}>
-          Debug Request
         </Button>
       </Flex>
     </Flex>
