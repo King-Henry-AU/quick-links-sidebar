@@ -31,8 +31,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   companyButtons: [],
 };
 
-hubspot.extend(({ context }) => <Settings context={context} />);
-
 interface SettingsProps {
   context: any;
 }
@@ -338,4 +336,4 @@ const Settings = ({ context }: SettingsProps) => {
   );
 };
 
-export default Settings;
+export default hubspot.extend(({ context }) => <Settings context={context} />);

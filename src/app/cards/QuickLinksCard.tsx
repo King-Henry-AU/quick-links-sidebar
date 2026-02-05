@@ -47,7 +47,23 @@ const DEFAULT_BUTTON_CONFIGS: ButtonSettings[] = [
   },
 ];
 
-hubspot.extend<"crm.record.sidebar">(({ context, actions }) => (
+// Utility function to safely extract property values from nested or flat structures
+function getPropertyValue(propertyValue: unknown): string {
+  if (propertyValue == null) return "";
+
+  // Handle object with .value field (nested structure)
+  if (typeof propertyValue === "object" && propertyValue !== null) {
+    const propObj = propertyValue as { value?: unknown };
+    if ("value" in propObj) {
+      return String(propObj.value ?? "");
+    }
+  }
+
+  // Handle flat string value (legacy structure)
+  return String(propertyValue);
+}
+
+export default hubspot.extend<"crm.record.sidebar">(({ context, actions }) => (
   <QuickLinksCard context={context} actions={actions} />
 ));
 
@@ -146,8 +162,8 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
   // Show loading state while settings are loading
   if (isLoadingSettings) {
     return (
-      <Flex direction="column" align="center" gap="small">
-        <LoadingSpinner label="Loading settings..." />
+      <Flex direction="column" align="center" gap="medium">
+        <LoadingSpinner label="Loading..." />
       </Flex>
     );
   }
@@ -155,8 +171,8 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
   // Show loading state while properties are loading
   if (isLoading) {
     return (
-      <Flex direction="column" align="center" gap="small">
-        <LoadingSpinner label="Loading links..." />
+      <Flex direction="column" align="center" gap="medium">
+        <LoadingSpinner label="Loading..." />
       </Flex>
     );
   }
@@ -182,21 +198,23 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
   // Build the list of buttons that have valid URLs
   const buttons = buttonConfigs
     .map((config) => {
-      const url = properties?.[config.urlProperty];
-      let label: string;
+      const url = getPropertyValue(properties?.[config.urlProperty]);
 
+      let label: string;
       if (config.labelType === "static") {
         label = config.staticLabel;
       } else if (config.labelProperty) {
-        label = properties?.[config.labelProperty] || config.staticLabel;
+        label = getPropertyValue(properties?.[config.labelProperty]) || config.staticLabel;
       } else {
         label = config.staticLabel;
       }
 
+      const hasUrl = Boolean(url && url.trim() !== "");
+
       return {
         url,
         label,
-        hasUrl: Boolean(url && url.trim() !== ""),
+        hasUrl,
       };
     })
     .filter((button) => button.hasUrl);
@@ -204,21 +222,14 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
   // If no buttons have URLs configured, show empty state
   if (buttons.length === 0) {
     return (
-      <EmptyState title="No links configured" layout="vertical" imageName="link">
-        <Text>
-          This card displays quick link buttons based on CRM properties you
-          configure.
-        </Text>
-        <Text>
-          Go to <strong>Settings</strong> to choose which properties to use for
-          button URLs and labels.
-        </Text>
+      <EmptyState title="No quick links" layout="vertical" imageName="link">
+        <Text>Configure URL properties in settings to display quick access buttons on this record.</Text>
         <Button
           onClick={() => actions.openSettingsPage()}
           variant="primary"
           size="sm"
         >
-          Open Settings
+          Configure Links
         </Button>
       </EmptyState>
     );
@@ -226,51 +237,27 @@ const QuickLinksCard = ({ context, actions }: QuickLinksCardProps) => {
 
   return (
     <Flex direction="column" gap="small">
-      <Flex direction="row" justify="between" align="center">
-        <Text format={{ fontWeight: "demibold" }}>Quick Links</Text>
-        <Button
-          onClick={() => actions.openSettingsPage()}
-          variant="transparent"
-          size="xs"
+      {buttons.map((button, index) => (
+        <CrmActionButton
+          key={index}
+          actionType="EXTERNAL_URL"
+          actionContext={{
+            href: normalizeUrl(button.url),
+          }}
+          variant="primary"
         >
-          ⚙️
-        </Button>
-      </Flex>
-      <Flex direction="column" gap="extra-small">
-        {buttons.map((button, index) => (
-          <CrmActionButton
-            key={index}
-            actionType="EXTERNAL_URL"
-            actionContext={{
-              href: normalizeUrl(button.url),
-            }}
-            variant="secondary"
-          >
-            {button.label}
-          </CrmActionButton>
-        ))}
-      </Flex>
-      <Flex direction="row" justify="center">
-        <Text variant="microcopy">
-          Powered by{" "}
-          <a
-            href="https://kinghenry.com.au"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#0091ae", textDecoration: "none" }}
-          >
-            King Henry
-          </a>
-        </Text>
-      </Flex>
+          {button.label}
+        </CrmActionButton>
+      ))}
     </Flex>
   );
 };
 
 // Helper function to ensure URLs have a protocol
 function normalizeUrl(url: string): string {
-  if (!url) return url;
+  if (!url) return "";
   const trimmed = url.trim();
+  if (trimmed === "") return "";
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     return trimmed;
   }
